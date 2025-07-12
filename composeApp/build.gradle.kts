@@ -10,6 +10,8 @@ plugins {
     alias(libs.plugins.composeMultiplatform)
     alias(libs.plugins.composeCompiler)
     alias(libs.plugins.composeHotReload)
+    id("app.cash.sqldelight") version "2.1.0"
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 kotlin {
@@ -32,26 +34,6 @@ kotlin {
     }
     
     jvm("desktop")
-    
-//    @OptIn(ExperimentalWasmDsl::class)
-//    wasmJs {
-//        outputModuleName.set("composeApp")
-//        browser {
-//            val rootDirPath = project.rootDir.path
-//            val projectDirPath = project.projectDir.path
-//            commonWebpackConfig {
-//                outputFileName = "composeApp.js"
-//                devServer = (devServer ?: KotlinWebpackConfig.DevServer()).apply {
-//                    static = (static ?: mutableListOf()).apply {
-//                        // Serve sources to debug inside browser
-//                        add(rootDirPath)
-//                        add(projectDirPath)
-//                    }
-//                }
-//            }
-//        }
-//        binaries.executable()
-//    }
 
     @OptIn(ExperimentalWasmDsl::class)
     js(IR) {
@@ -79,16 +61,52 @@ kotlin {
         androidMain.dependencies {
             implementation(compose.preview)
             implementation(libs.androidx.activity.compose)
+
+            implementation(libs.ktor.client.android)
+            implementation(libs.koin.android)
+            implementation(libs.android.driver)
+
         }
         commonMain.dependencies {
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material3)
+            implementation(compose.materialIconsExtended)
             implementation(compose.ui)
             implementation(compose.components.resources)
             implementation(compose.components.uiToolingPreview)
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtimeCompose)
+
+            //ktor
+            implementation(libs.ktor.client.core)
+            implementation(libs.ktor.client.content.negotiation)
+            implementation(libs.ktor.serialization.kotlinx.json)
+            implementation(libs.ktor.client.logging)
+
+            //navigation
+            implementation(libs.jetbrains.navigation.compose)
+
+            //coil
+            implementation(libs.coil.compose)
+            implementation(libs.coil.network.ktor3)
+
+            //koin
+            implementation(libs.koin.core)
+            implementation(libs.koin.compose)
+            implementation(libs.koin.compose.viewmodel)
+
+            //multi platform settings
+            implementation(libs.multiplatform.settings)
+
+            //date time
+            implementation(libs.kotlinx.datetime)
+
+        }
+        iosMain.dependencies {
+            implementation(libs.ktor.client.darwin)
+            implementation(libs.native.driver)
+
         }
         commonTest.dependencies {
             implementation(libs.kotlin.test)
@@ -96,6 +114,17 @@ kotlin {
         desktopMain.dependencies {
             implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutinesSwing)
+
+            implementation(libs.ktor.client.java)
+            implementation(libs.sqlite.driver)
+        }
+        jsMain.dependencies {
+            implementation(libs.ktor.client.js)
+
+            implementation(npm("@cashapp/sqldelight-sqljs-worker", "2.1.0"))
+            implementation(npm("sql.js", "1.8.0"))
+            implementation(libs.web.worker.driver)
+            implementation(devNpm("copy-webpack-plugin", "9.1.0"))
         }
     }
 }
@@ -139,6 +168,15 @@ compose.desktop {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "in.dev.ne.receipe.app"
             packageVersion = "1.0.0"
+        }
+    }
+}
+
+sqldelight {
+    databases {
+        create("ReceipeAppCmpDb") {
+            packageName.set("in.dev.ne.receipe.app")
+            generateAsync = true
         }
     }
 }
