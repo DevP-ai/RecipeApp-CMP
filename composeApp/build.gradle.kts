@@ -176,7 +176,7 @@ sqldelight {
     databases {
         create("ReceipeAppCmpDb") {
             packageName.set("in.dev.ne.receipe.app")
-            generateAsync = true
+            generateAsync.set(true)
         }
     }
 }
